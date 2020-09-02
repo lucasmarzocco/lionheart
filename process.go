@@ -196,8 +196,8 @@ func (u *User) NormalizeTraits() {
 
 func (u *User) WriteUserData(link string) {
 
-	accountSid := "ACb93ed6f47e851a70bb0324962a11ad86"
-	token := "2f527566eed4f9f8f04932abc4ecc6d3"
+	accountSid := os.Getenv("ACCOUNT_SID")
+	token := os.Getenv("TOKEN")
 	urlStr := "https://api.twilio.com/2010-04-01/Accounts/" + accountSid + "/Messages.json"
 
 	msgData := url.Values{}
