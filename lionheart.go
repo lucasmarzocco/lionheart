@@ -199,9 +199,13 @@ func (u *User) WriteUserData(link string) {
 
 	accountSid := os.Getenv("ACCOUNT_SID")
 	token := os.Getenv("TOKEN")
+
+	fmt.Println(accountSid)
+	fmt.Println(token)
 	urlStr := "https://api.twilio.com/2010-04-01/Accounts/" + accountSid + "/Messages.json"
 
 	fmt.Println("Hehe")
+	fmt.Println(urlStr)
 
 	msgData := url.Values{}
 	msgData.Set("To", u.Phone)
