@@ -200,18 +200,25 @@ func (u *User) WriteUserData(link string) {
 	token := os.Getenv("TOKEN")
 	urlStr := "https://api.twilio.com/2010-04-01/Accounts/" + accountSid + "/Messages.json"
 
+	fmt.Println("Hehe")
+
 	msgData := url.Values{}
 	msgData.Set("To", u.Phone)
+	fmt.Println(u.Phone)
 	msgData.Set("From", "4154492889")
 	msgData.Set("Body", "Hello! Your results can be found at: " + link)
 	msgDataReader := *strings.NewReader(msgData.Encode())
 
 	client := &http.Client{}
-	req, _ := http.NewRequest("POST", urlStr, &msgDataReader)
+	req, err := http.NewRequest("POST", urlStr, &msgDataReader)
+	if err != nil {
+		panic(err)
+	}
 	req.SetBasicAuth(accountSid, token)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	client.Do(req)
+	fmt.Println("TEXT SHOULD HAVE SENT!")
 }
 
 func getMin(letter string) float32 {
