@@ -133,7 +133,7 @@ func (u *User) ProcessSubtraits(test []byte) {
 
 	for i, ele := range event.Form.Answers[3:] {
 
-		entry := u.Data[i]
+		entry := u.Data[i+1]
 
 		if entry.Trait == "" {
 			continue
