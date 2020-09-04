@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"encoding/json"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
 	"strings"
-	"fmt"
 )
 
 type User struct {
@@ -23,9 +23,9 @@ type User struct {
 
 type Trait struct {
 	Name        string
-	RawScore    float32
-	NormalScore float32
-	Min         float32
+	RawScore    float64
+	NormalScore float64
+	Min         float64
 }
 
 type Question struct {
@@ -33,7 +33,7 @@ type Question struct {
 	Description string
 	Key         int
 	Trait       string
-	Min         float32
+	Min         float64
 }
 
 type Event struct {
@@ -83,7 +83,7 @@ type AnswerField struct {
 func (u *User) LoadQuestionsFromFile() {
 	data := make(map[int]Question)
 
-	file, err := os.Open("internal/resources/test.txt")
+	file, err := os.Open(os.Getenv("TESTFILE"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func (u *User) LoadQuestionsFromFile() {
 			Description: question[1],
 			Key:         key,
 			Trait:       question[3],
-			Min:         float32(min),
+			Min:         float64(min),
 		}
 
 		data[number] = q
@@ -140,11 +140,11 @@ func (u *User) ProcessSubtraits(test []byte) {
 		}
 
 		if _, ok := subs[entry.Trait]; ok {
-			subs[entry.Trait].RawScore += float32(entry.Key * ele.Number)
+			subs[entry.Trait].RawScore += float64(entry.Key * ele.Number)
 		} else {
 			subs[entry.Trait] = &Trait{
 				entry.Trait,
-				float32(entry.Key * ele.Number),
+				float64(entry.Key * ele.Number),
 				0,
 				entry.Min,
 			}
@@ -157,8 +157,9 @@ func (u *User) ProcessSubtraits(test []byte) {
 func (u *User) NormalizeSubtraits() {
 
 	for _, v := range u.Subtraits {
-		math := 6.25 * (v.RawScore - v.Min)
-		v.NormalScore = math
+		s := 6.25 * (v.RawScore - v.Min)
+		m := math.RoundToEven(s)
+		v.NormalScore = m
 	}
 }
 
@@ -188,10 +189,9 @@ func (u *User) ProcessTraits() {
 func (u *User) NormalizeTraits() {
 
 	for _, v := range u.Traits {
-		math := (100 / 96) * (v.RawScore - v.Min)
-		v.NormalScore = math
-
-		//fmt.Printf("%s: %g\n", k, v.NormalScore)
+		s := (100 / float64(96)) * (v.RawScore - v.Min)
+		m := math.RoundToEven(s)
+		v.NormalScore = m
 	}
 }
 
@@ -199,19 +199,12 @@ func (u *User) WriteUserData(link string) {
 
 	accountSid := os.Getenv("ACCOUNT_SID")
 	token := os.Getenv("TOKEN")
-
-	fmt.Println(accountSid)
-	fmt.Println(token)
 	urlStr := "https://api.twilio.com/2010-04-01/Accounts/" + accountSid + "/Messages.json"
-
-	fmt.Println("Hehe")
-	fmt.Println(urlStr)
 
 	msgData := url.Values{}
 	msgData.Set("To", u.Phone)
-	fmt.Println(u.Phone)
-	msgData.Set("From", "4154492889")
-	msgData.Set("Body", "Hello! Your results can be found at: " + link)
+	msgData.Set("From", os.Getenv("PHONE"))
+	msgData.Set("Body", "Hello! Your Lionheart test results can be found at: " + link)
 	msgDataReader := *strings.NewReader(msgData.Encode())
 
 	client := &http.Client{}
@@ -223,10 +216,9 @@ func (u *User) WriteUserData(link string) {
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	client.Do(req)
-	fmt.Println("TEXT SHOULD HAVE SENT!")
 }
 
-func getMin(letter string) float32 {
+func getMin(letter string) float64 {
 
 	switch letter {
 	case "A":
@@ -242,8 +234,4 @@ func getMin(letter string) float32 {
 	}
 
 	return 0
-}
-
-func DoStuff() {
-
 }
